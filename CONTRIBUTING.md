@@ -57,7 +57,7 @@ pip install twine
 index-servers =
     pypi
 
-[nexus]
+[pypi]
 repository=https://upload.pypi.org/legacy/
 username=用户名
 password=密码
@@ -74,7 +74,7 @@ python setup.py sdist bdist_wheel
 ### 4、上传
 
 ```
-twine upload -r nexus dist/*   
+twine upload -r pypi dist/*   
 ```
 
 ### 5、清空
