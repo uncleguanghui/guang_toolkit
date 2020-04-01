@@ -1,0 +1,2 @@
+recursive-include guang_toolkit/static *
+recursive-include guang_toolkit/configs *
