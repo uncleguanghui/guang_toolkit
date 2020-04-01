@@ -60,6 +60,7 @@ setup(
     name="guang_toolkit",  # 应用名
     version=get_version(),  # 版本号
     packages=find_packages(),  # 指定子目录的python包
+    long_description_content_type='text/markdown',
     install_requires=[  # 依赖列表
         'pandas >= 0.24.2',
         'openpyxl >= 2.5.12',
