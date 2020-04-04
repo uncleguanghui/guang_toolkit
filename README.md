@@ -56,8 +56,7 @@ weather = pdt.WeatherCrawler()  # 初始化爬虫实例
 实时天气
 
 ```
-weather.get_real_time_weather('上海市')
->>>
+>>> weather.get_real_time_weather('上海市')
 {
     "24h降水": "0", 
     "aqi_pm25": "114", 
@@ -78,8 +77,7 @@ weather.get_real_time_weather('上海市')
 未来一小段时间的天气预报（逐小时）
 
 ```
-weather.get_hours_weather('上海市')
->>>
+>>> weather.get_hours_weather('上海市')
 {
     "城市": "上海市", 
     "城市编码": "101020100", 
@@ -107,8 +105,7 @@ weather.get_hours_weather('上海市')
 近7天天气预报（实际返回8天的结果，包括昨天）
 
 ```
-weather.get_7d_weather('上海市')
->>>
+>>> weather.get_7d_weather('上海市')
 {
     "城市": "上海市", 
     "城市编码": "101020100", 
@@ -140,8 +137,7 @@ weather.get_7d_weather('上海市')
 近15天天气预报（实际返回16天的结果，包括昨天）
 
 ```
-weather.get_15d_weather('上海市')
->>>
+>>> weather.get_15d_weather('上海市')
 {
     "城市": "上海市", 
     "城市编码": "101020100", 
@@ -173,8 +169,7 @@ weather.get_15d_weather('上海市')
 历史天气
 
 ```
-weather.get_history_weather('上海市', '20190101')
->>>
+>>> weather.get_history_weather('上海市', '20190101')
 {
     "url": "http://www.tianqihoubao.com/lishi/shanghai/20190101.html", 
     "城市": "上海市", 
@@ -197,8 +192,7 @@ crawler = pdt.AMAPCrawler() # 初始化地图实例
 
 解析单个坐标（逆地理编码）
 ```
-crawler.regeocode(121, 31)
->>>
+>>> crawler.regeocode(121, 31)
 {
     "adcode": "310118", 
     "address": "上海市青浦区练塘镇岳荡", 
@@ -216,8 +210,7 @@ crawler.regeocode(121, 31)
 
 解析单个地址（地理编码）
 ```
-crawler.geocode('上海市嘉定区汽车创新港')
->>>
+>>> crawler.geocode('上海市嘉定区汽车创新港')
 {
     "address": "上海市嘉定区汽车创新港", 
     "city": "上海市", 
@@ -235,8 +228,7 @@ crawler.geocode('上海市嘉定区汽车创新港')
 
 批量解析坐标
 ```
-crawler.batch_process_regeocode([(121, 31), (116, 39)])
->>>
+>>> crawler.batch_process_regeocode([(121, 31), (116, 39)])
 {
     "adcodes": [
         "310118", 
@@ -264,8 +256,7 @@ crawler.batch_process_regeocode([(121, 31), (116, 39)])
 
 批量解析地址
 ```
-crawler.batch_process_geocode(['上海市嘉定区汽车创新港', '北京市故宫博物院'])
->>>
+>>> crawler.batch_process_geocode(['上海市嘉定区汽车创新港', '北京市故宫博物院'])
 {
     "adcodes": [
         "310114", 
@@ -308,8 +299,7 @@ lat = 31
 查看地理哈希的精度及其误差范围
 
 ```
-help(encode)
->>>
+>>> help(pdt.encode)
             precision |  longitude  |  latitude
                1      |  5009.4km   |  4992.6km
                2      |  1252.3km   |   624.1km
@@ -342,29 +332,28 @@ help(encode)
 对坐标进行哈希编码，精确到7位（最大误差约150m）
 
 ```
-pdt.encode(lat, lng, 7)
->>> 'wtw037m'
+>>> pdt.encode(lat, lng, 7)
+'wtw037m'
 ```
 
 逆解析哈希值，返回（纬度，经度）
 
 ```
-pdt.decode('wtw037m')
->>> (30.999984741210938, 120.99998474121094)
+>>> pdt.decode('wtw037m')
+(30.999984741210938, 120.99998474121094)
 ```
 
 逆解析哈希值，并返回网格的边长（纬度，经度，纬度跨度，经度跨度）
 
 ```
-pdt.decode_exactly('wtw037m')
->>> (30.999984741210938, 120.99998474121094, 0.0006866455078125, 0.0006866455078125)
+>>> pdt.decode_exactly('wtw037m')
+(30.999984741210938, 120.99998474121094, 0.0006866455078125, 0.0006866455078125)
 ```
 
 查看哈希值的边界
 
 ```
-pdt.bbox('wtw037m')
->>>
+>>> pdt.bbox('wtw037m')
 {
     "e": 121.00067138671875,  # 最大经度
     "n": 31.00067138671875,  # 最大纬度
@@ -376,15 +365,15 @@ pdt.bbox('wtw037m')
 查看周围相邻的8个哈希值
 
 ```
-pdt.neighbors('wtw037m')
->>> ['wtw037k', 'wtw037q', 'wtw037s', 'wtw037t', 'wtw037w', 'wtw037h', 'wtw037j', 'wtw037n']
+>>> pdt.neighbors('wtw037m')
+['wtw037k', 'wtw037q', 'wtw037s', 'wtw037t', 'wtw037w', 'wtw037h', 'wtw037j', 'wtw037n']
 ```
 
 查找半径500米内、指定精度的所有哈希值
 
 ```
-pdt.hash_neighbors_radius(lat, lng, radius_m=500, precision=7)
->>> 'wtw037q,wtw037g,wtw0376,wtw037y,wtw0374,wtw03e8,wtw037z,wtw03kh,wtw037n,wtw037t,wtw036v,wtw037x,wtw036w,wtw036y,wtw03e2,wtw03kj,wtw036s,wtw037p,wtw037w,wtw037h,wtw037e,wtw036z,wtw037r,wtw037u,wtw037f,wtw037d,wtw037v,wtw036t,wtw03kn,wtw0377,wtw037m,wtw03eb,wtw036g,wtw036f,wtw037j,wtw036u,wtw0375,wtw03db,wtw037s,wtw03e0,wtw037k'
+>>> pdt.hash_neighbors_radius(lat, lng, radius_m=500, precision=7)
+'wtw037q,wtw037g,wtw0376,wtw037y,wtw0374,wtw03e8,wtw037z,wtw03kh,wtw037n,wtw037t,wtw036v,wtw037x,wtw036w,wtw036y,wtw03e2,wtw03kj,wtw036s,wtw037p,wtw037w,wtw037h,wtw037e,wtw036z,wtw037r,wtw037u,wtw037f,wtw037d,wtw037v,wtw036t,wtw03kn,wtw0377,wtw037m,wtw03eb,wtw036g,wtw036f,wtw037j,wtw036u,wtw0375,wtw03db,wtw037s,wtw03e0,wtw037k'
 ```
 
 
@@ -502,8 +491,8 @@ redis.set('s', 1)
 查看key为's'的数据
 
 ```
-redis.get('s')
->>> 1
+>>> redis.get('s')
+1
 ```
 
 删除key为's'的数据
@@ -527,8 +516,8 @@ pdt.pickle_dump(666, 'test.pkl')
 读取数据
 
 ```
-pdt.pickle_load('test.pkl')
->>> 666
+>>> pdt.pickle_load('test.pkl')
+666
 ```
 
 ### AWS S3
@@ -589,34 +578,57 @@ s3.download_file('remote_path', 'local_path')
 
 ### 可视化
 
-提供了一些可视化的方法。同时也支持一些高级方法：
-1. 自定义地图样式：通过在函数里传入plt.plot所需的参数，如`plot_province('浙江省', color='#00BCBC')`；
-1. 支持传入ax参数，如`plot_province('浙江省', ax=ax)`，方便控制图层；
-1. 函数本身也返回了ax，方便控制图层
-
 环状分布图
 
 ```
 pdt.donut([1, 1, 2, 1])
 ```
+![](https://upload-images.jianshu.io/upload_images/8888511-d6a378f60408d306.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-可视化中国
+地理可视化
 
+首先，初始化中国实例（用于获取最新的行政区划）
 ```
-pdt.plot_china()
-```
-
-可视化某个省份
-
-```
-pdt.plot_province('浙江省')
+china = pdt.China() # 初始化中国实例
 ```
 
-可视化某个城市
+地理可视化，全国、省、市、区都可以画~
 
 ```
-pdt.plot_city('苏州市')
+china.plot(adcode_or_name='浙江', subdistrict=1, area_threshold=0.005)
 ```
+
+这里解释下参数：
+* adcode_or_name：adcode或者名称，支持模糊名称（如内蒙古自治区、内蒙都一样）
+* subdistrict: 设置绘制下级行政区级数，可选值为0/1/2/3，默认值为0，当绘图对象的本身级别较低时（如县），subdistrict只能为0，以此类推。
+  * 0：不绘制下级行政区，适用于全国/省/市/区；
+  * 1：绘制下一级行政区，适用于全国/省/市；
+  * 2：绘制下两级行政区，适用于全国/省；
+  * 3：绘制下三级行政区，适用于全国；
+* area_threshold: 绘图阈值，面积小于该值的多边形将不再绘制在地图上，该参数用于加速绘图
+
+![](https://upload-images.jianshu.io/upload_images/8888511-700601b554d4d0cf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/640)
+
+如果对提供的默认绘图方法不满意，也可以用下面的方法获取到所有边界坐标，然后再自行绘图~
+
+```
+import matplotlib.pyplot as plt
+
+# 获取所有边界坐标
+polylines = china.get_all_polylines('上海', subdistrict=2)
+
+# 绘图
+if polylines:
+    plt.figure(figsize=(12, 12))
+    for polyline in polylines:
+        plt.plot(polyline[:, 0], polyline[:, 1])
+    plt.axis("equal")
+    plt.show()
+else:
+    print('找不到边界坐标，请确认 adcode 或名称是否正确，或者 subdistrict 值设置过大')
+```
+![](https://upload-images.jianshu.io/upload_images/8888511-536d99d743493dec.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 
 ## License
 

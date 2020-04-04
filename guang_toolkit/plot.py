@@ -5,15 +5,13 @@
 # @Software: PyCharm
 
 import logging
-from collections import defaultdict
 
 import pandas as pd
 import requests
 import numpy as np
+from shapely.geometry import Polygon
 
 logger = logging.getLogger(__name__)
-
-dict_map = defaultdict(dict)
 
 
 def donut(data, title='', **kwargs):
@@ -48,209 +46,177 @@ def donut(data, title='', **kwargs):
     return ax
 
 
-def plot_china(show_province_name=False, **kwargs):
-    """
-    可视化全国
-    :param show_province_name: 是否显示省名称，默认不显示
-    :param kwargs: plt.line 参数
-    :return:
-    """
+class China:
+    def __init__(self):
+        self.dict_adcode = {}  # {adcode：详情}
+        self.dict_name = {}  # {名称：详情}
+        self.districts = []  # 地区列表
 
-    dict_map_china = dict_map.get('china')
+        self.dict_polylines = {}  # 各地区的边界坐标（用于缓存数据）
 
-    if dict_map_china is None:
-        dict_map_china = {}
-        url = f'http://10.128.242.75:8007/api/geo/provinces'
-        result = requests.get(url).json()
+        self.update_districts()  # 更新行政区划
 
-        for data in result['data']:
-            adcode = data['adcode']
-            try:
-                dict_map_china[adcode] = {
-                    'name': data['name'],
-                    'polylines': [
-                        np.array([
-                            [float(x) for x in xy.split(',')]
-                            for xy in polylines.split(';')
-                        ])
-                        for polylines in data['polyline'].split('|')
-                    ]
-                }
-            except Exception as err:
-                logger.warning(err)
+    def update_districts(self):
+        """
+        更新行政区划
+        :return:
+        """
+        url = f'https://restapi.amap.com/v3/config/district'
+        data = {
+            'keywords': '中国',
+            'key': '87a08092f3e9c212e6f06e6327d9f385',
+            'subdistrict': 3,  # 返回下级行政区
+            'extensions': 'base',
+            'offset': 1  # 只返回一条结果
+        }
+        country = requests.get(url, params=data).json()['districts'][0]
+        self.dict_adcode[country['adcode']] = country
+        self.dict_name[country['name']] = country
+        self.dict_name['中国'] = country
 
-        dict_map['china'] = dict_map_china
+        self.districts = country['districts']
 
-    # 设置ax
-    ax = kwargs.pop('ax', None)
-    if ax is None:
-        import matplotlib.pyplot as plt
-        fig, ax = plt.subplots(figsize=(8, 8), dpi=100)
-    ax.set_aspect(1)
+        for province in self.districts:
+            self.dict_adcode[province['adcode']] = province
+            for city in province['districts']:
+                self.dict_adcode[city['adcode']] = city
+                for district in city['districts']:
+                    self.dict_adcode[district['adcode']] = district
 
-    for adcode, info in dict_map_china.items():
-        if show_province_name:
-            ax.text(*list(sorted(info['polylines'], key=lambda x: len(x))[-1].mean(axis=0)), info['name'], fontsize=8)
-        # 画边界
-        for border in info['polylines']:
-            ax.plot(border[:, 0], border[:, 1], **kwargs)
+        for province in self.districts:
+            self.dict_name[province['name']] = province
+            for city in province['districts']:
+                self.dict_name[city['name']] = city
+                for district in city['districts']:
+                    self.dict_name[district['name']] = district
 
-    return ax
-
-
-def plot_province(province_name=None, province_adcode=None, show_city_name=False, **kwargs):
-    """
-    可视化省份
-    :param province_name: 省份名称
-    :param province_adcode: 省份adcode
-    :param show_city_name: 是否显示城市名称，默认不显示
-    :param kwargs: plt.line 参数
-    :return:
-    """
-
-    # 判断数据是否有效
-    if province_name is None and province_adcode is None:
-        logger.error('请指定省份名称或adcode!')
-        return
-
-    # 获取各城市边界
-    def get_dict_city_info(cities):
-        dict_city_info = {}
-        for city in cities:
-            _r = requests.get(f'http://10.128.242.75:8007/api/geo/city?name={city}').json()
-            dict_city_info[city] = _r['data'][0]
-            dict_city_info[city]['polylines'] = [
-                np.array([
-                    [float(x) for x in xy.split(',')]
-                    for xy in polylines.split(';')
-                ])
-                for polylines in dict_city_info[city]['polyline'].split('|')
-            ]
-        return dict_city_info
-
-    # 获取数据
-    dict_province = dict_map['province'].get(province_adcode, dict_map['province'].get(province_name))
-    if dict_province is None:
-        if province_name is not None:
-            r = requests.get(f'http://10.128.242.75:8007/api/geo/province?name={province_name}').json()
+    def _get_matched_adcode(self, adcode_or_name):
+        """
+        获取最匹配的adcode
+        :param adcode_or_name:
+        :return:
+        """
+        adcode_or_name = str(adcode_or_name)
+        if adcode_or_name.isdigit():
+            if adcode_or_name in self.dict_adcode:
+                return adcode_or_name
         else:
-            r = requests.get(f'http://10.128.242.75:8007/api/geo/province?adcode={province_adcode}').json()
-        if r['data']:
-            df_province = pd.DataFrame(r['data'][0]['subdistricts'])
-            province_name = r['data'][0]['name']
-            province_adcode = r['data'][0]['adcode']
-            list_city = list(df_province['city_name'].unique())
+            max_num = 0  # 所有名称里，从首字符开始的最长相同长度的最大值
+            matched_adcode = None  # 最匹配的adcode
+            for name, info in self.dict_name.items():
+                # 找到从首字符开始的最长相同长度num
+                num = 0
+                for i, (s1, s2) in enumerate(zip(adcode_or_name, name)):
+                    if s1 == s2:
+                        num = i + 1
+                    else:
+                        break
+                # 当前最长相同长度至少为2，且比之前找到的最长相同长度更长，则更新
+                if num >= 2 and num > max_num:
+                    max_num = num
+                    matched_adcode = info['adcode']
+            return matched_adcode
 
-            # 获取边界
-            dict_province = get_dict_city_info(list_city)
-
-            # 保存数据
-            dict_map['province'][province_adcode] = dict_map['province'][province_name] = dict_province
+    def _get_all_subdistrict_adcode(self, adcode, subdistrict=0):
+        """
+        基于subdistrict的值，获取当前及所有下级行政区划的adcode
+        :param adcode:
+        :param subdistrict: 设置获取下级行政区级数的adcode，可选值为0/1/2/3，默认值为0，说明如下：
+            0：不获取下级行政区；
+            1：获取下一级行政区；
+            2：获取下两级行政区；
+            3：获取下三级行政区；
+        :return:
+        """
+        list_adocde = []
+        if subdistrict == 0:
+            list_adocde.append(adcode)
         else:
-            logger.warning('找不到省份数据')
-            dict_province = {}
+            for p1 in self.dict_adcode[adcode]['districts']:
+                if subdistrict == 1:
+                    list_adocde.append(p1['adcode'])
+                else:
+                    for p2 in p1['districts']:
+                        if subdistrict == 2:
+                            list_adocde.append(p2['adcode'])
+                        else:
+                            for p3 in p2['districts']:
+                                list_adocde.append(p3['adcode'])
+        return list(set(list_adocde))
 
-    # 画城市边界
-    if dict_province:
-        # 设置ax
-        ax = kwargs.pop('ax', None)
-        if ax is None:
+    def _get_polylines(self, adcode):
+        """
+        获取某个行政区划的边界坐标点
+        :param adcode:
+        :return:
+        """
+
+        # 先查询缓存
+        polylines = self.dict_polylines.get(adcode)
+        if not polylines:
+            url = f'https://restapi.amap.com/v3/config/district'
+            data = {
+                'keywords': adcode,
+                'key': '87a08092f3e9c212e6f06e6327d9f385',
+                'subdistrict': 0,  # 返回下级行政区
+                'extensions': 'all',
+                'offset': 1  # 只返回一条结果
+            }
+            districts = requests.get(url, params=data).json()['districts']
+            polylines = []
+            if districts:
+                for district in districts[0]['polyline'].split('|'):
+                    borders = np.array([[float(i) for i in j.split(',')] for j in district.split(';')])
+                    polylines.append(borders)
+            self.dict_polylines[adcode] = polylines
+
+        return polylines
+
+    def get_all_polylines(self, adcode_or_name, subdistrict=0):
+        """
+        获取边境坐标点
+        :param adcode_or_name:
+        :param subdistrict: 设置获取下级行政区级数的边界，可选值为0/1/2/3，默认值为0，说明如下：
+            0：不获取下级行政区；
+            1：获取下一级行政区；
+            2：获取下两级行政区；
+            3：获取下三级行政区；
+        :return:
+        """
+        adcode = self._get_matched_adcode(adcode_or_name)
+        if adcode is None:
+            print('找不到给定的行政区域')
+            return []
+
+        list_adcode = self._get_all_subdistrict_adcode(adcode, subdistrict)
+        polylines = []
+        for adcode in list_adcode:
+            polylines += self._get_polylines(adcode)
+
+        return polylines
+
+    def plot(self, adcode_or_name, subdistrict=0, area_threshold=0.005):
+        """
+        可视化边境坐标点
+        :param adcode_or_name:
+        :param subdistrict: 设置绘制下级行政区级数，可选值为0/1/2/3，默认值为0，说明如下：
+            0：不绘制下级行政区；
+            1：绘制下一级行政区；
+            2：绘制下两级行政区；
+            3：绘制下三级行政区；
+        :param area_threshold: 绘图阈值，面积小于该值的多边形将不再绘制在地图上，该参数用于加速绘图
+        :return:
+        """
+
+        polylines = self.get_all_polylines(adcode_or_name, subdistrict)
+        if polylines:
             import matplotlib.pyplot as plt
-            fig, ax = plt.subplots(figsize=(8, 8), dpi=100)
-        ax.set_aspect(1)
 
-        for d_city in dict_province.values():
-            # 显示城市名字
-            if show_city_name:
-                # 所有多边形的坐标的均值
-                # center_lng, center_lat = np.concatenate(d_city['polylines']).mean(axis=0)
-                # ax.text(center_lng, center_lat, d_city['name'], fontsize=8)
-                # 最大多边形的坐标的均值
-                ax.text(*list(sorted(d_city['polylines'], key=lambda x: len(x))[-1].mean(axis=0)), d_city['name'],
-                        fontsize=8)
-            # 画边界
-            for border in d_city['polylines']:
-                ax.plot(border[:, 0], border[:, 1], **kwargs)
-
-        return ax
-
-
-def plot_city(city_name=None, city_adcode=None, show_district_name=False, **kwargs):
-    """
-    可视化城市
-    :param city_name: 城市名称
-    :param city_adcode: 城市adcode
-    :param show_district_name: 是否显示县区名称，默认不显示
-    :param kwargs: plt.line 参数
-    :return:
-    """
-
-    # 判断数据是否有效
-    if city_name is None and city_adcode is None:
-        logger.error('请指定城市名称或adcode!')
-        return
-
-    # 获取各城市边界
-    def get_dict_district_info(district_adcodes):
-        dict_district_info = {}
-        for adcode in district_adcodes:
-            url = f'http://10.128.242.75:8007/api/geo/district?adcode={adcode}'
-            _r = requests.get(url).json()
-            if _r['data']:
-                dict_district_info[adcode] = _r['data'][0]
-                dict_district_info[adcode]['polylines'] = [
-                    np.array([
-                        [float(x) for x in xy.split(',')]
-                        for xy in polylines.split(';')
-                    ])
-                    for polylines in dict_district_info[adcode]['polyline'].split('|')
-                ]
-        return dict_district_info
-
-    # 获取省份的各城市
-    dict_city = dict_map['city'].get(city_name, dict_map['city'].get(city_adcode))
-    if dict_city is None:
-        if city_name is not None:
-            r = requests.get(f'http://10.128.242.75:8007/api/geo/city?name={city_name}').json()
+            plt.figure(figsize=(12, 12))
+            for polyline in polylines:
+                if Polygon(polyline).area > area_threshold:
+                    plt.plot(polyline[:, 0], polyline[:, 1])
+            plt.axis("equal")
+            plt.show()
         else:
-            r = requests.get(f'http://10.128.242.75:8007/api/geo/city?adcode={city_adcode}').json()
-
-        if r['data']:
-            df_city = pd.DataFrame(r['data'][0]['subdistricts'])
-            city_name = r['data'][0]['name']
-            city_adcode = r['data'][0]['adcode']
-            list_district = list(df_city['district_adcode'].unique())
-
-            # 获取边界
-            dict_city = get_dict_district_info(list_district)
-
-            # 保存数据
-            dict_map['city'][city_name] = dict_map['city'][city_adcode] = dict_city
-        else:
-            logger.warning('找不到城市数据')
-            dict_city = {}
-
-    # 画城市边界
-    if dict_city:
-        # 设置ax
-        ax = kwargs.pop('ax', None)
-        if ax is None:
-            import matplotlib.pyplot as plt
-            fig, ax = plt.subplots(figsize=(8, 8), dpi=100)
-        ax.set_aspect(1)
-
-        # 画县区边界
-        for d_district in dict_city.values():
-            # 显示县区名字
-            if show_district_name:
-                # 所有多边形的坐标的均值
-                # center_lng, center_lat = np.concatenate(d_district['polylines']).mean(axis=0)
-                # ax.text(center_lng, center_lat, d_district['name'], fontsize=8)
-                # 最大多边形的坐标的均值
-                ax.text(*list(sorted(d_district['polylines'], key=lambda x: len(x))[-1].mean(axis=0)),
-                        d_district['name'], fontsize=8)
-            # 画边界
-            for border in d_district['polylines']:
-                ax.plot(border[:, 0], border[:, 1], **kwargs)
-
-        return ax
+            print('找不到边界坐标，请确认 adcode 或名称是否正确，或者 subdistrict 设置过大')
