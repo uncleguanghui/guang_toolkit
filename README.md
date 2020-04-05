@@ -1,5 +1,14 @@
 # Guang-Toolkit 工具包
 
+
+[![CSDN](https://img.shields.io/badge/CSND-光光军-brightgreen.svg)](https://blog.csdn.net/weixin_39334709)
+[![简书](https://img.shields.io/badge/简书-章光辉-ff69b4.svg)](https://www.jianshu.com/u/3b8454e95630)
+
+[![PyPI](https://img.shields.io/pypi/v/guang_toolkit)](https://pypi.org/project/guang-toolkit/)
+[![PyPI - Python Version](https://img.shields.io/badge/python-3.6%2B-blue)](https://pypi.org/project/guang-toolkit/)
+[![PyPI - License](https://img.shields.io/badge/license-MIT-green)](https://github.com/uncleguanghui/guang_toolkit/blob/master/LICENSE.txt)
+![GitHub last commit](https://img.shields.io/github/last-commit/uncleguanghui/guang_toolkit.svg)
+
 本项目为平时写的一些小工具，用于实现特定需求
 
 ## 目录

@@ -50,6 +50,8 @@ class CleanHook(clean):
         maybe_rm('build')
         maybe_rm('dist')
         maybe_rm('.eggs')
+        maybe_rm('htmlcov')
+        subprocess.call('rm -rf .coverage', shell=True)
         subprocess.call('rm -rf *.egg', shell=True)
         subprocess.call('rm -f datastore.db', shell=True)
         subprocess.call(r'find . -name "*.pyc" -exec rm -rf {} \;',

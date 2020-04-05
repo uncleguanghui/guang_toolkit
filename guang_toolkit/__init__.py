@@ -18,7 +18,7 @@ __all__ = [
     'donut', 'China',
     'S3', 'WeatherCrawler'
 ]
-__version__ = '3.0.12'
+__version__ = '3.0.13'
 __doc__ = """
 github地址：https://github.com/uncleguanghui/guang_toolkit
 """
