@@ -128,9 +128,12 @@ class China:
             3：获取下三级行政区；
         :return:
         """
+        adcode = str(adcode)
+
         list_adocde = []
         if subdistrict == 0:
-            list_adocde.append(adcode)
+            if self._get_matched_adcode(adcode) is not None:
+                list_adocde.append(adcode)
         else:
             for p1 in self.dict_adcode[adcode]['districts']:
                 if subdistrict == 1:
@@ -150,10 +153,11 @@ class China:
         :param adcode:
         :return:
         """
+        adcode = str(adcode)
 
         # 先查询缓存
         polylines = self.dict_polylines.get(adcode)
-        if not polylines:
+        if polylines is None and self._get_matched_adcode(adcode) is not None:
             url = f'https://restapi.amap.com/v3/config/district'
             data = {
                 'keywords': adcode,

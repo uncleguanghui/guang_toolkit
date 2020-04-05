@@ -10,7 +10,6 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from pathlib import Path
 import logging
-import getpass
 
 from jinja2 import Template
 

@@ -42,7 +42,7 @@ pip install guang_toolkit
 首先，导入模块
 
 ```
-import guang_toolkit as pdt
+import guang_toolkit as gt
 ```
 
 ### 天气爬虫
@@ -50,7 +50,7 @@ import guang_toolkit as pdt
 首先初始化爬虫实例，
 
 ```
-weather = pdt.WeatherCrawler()  # 初始化爬虫实例
+weather = gt.WeatherCrawler()  # 初始化爬虫实例
 ```
 
 实时天气
@@ -187,7 +187,7 @@ weather = pdt.WeatherCrawler()  # 初始化爬虫实例
 首先初始化地图实例，
 
 ```
-crawler = pdt.AMAPCrawler() # 初始化地图实例
+crawler = gt.AMAPCrawler() # 初始化地图实例
 ```
 
 解析单个坐标（逆地理编码）
@@ -299,7 +299,7 @@ lat = 31
 查看地理哈希的精度及其误差范围
 
 ```
->>> help(pdt.encode)
+>>> help(gt.encode)
             precision |  longitude  |  latitude
                1      |  5009.4km   |  4992.6km
                2      |  1252.3km   |   624.1km
@@ -332,28 +332,28 @@ lat = 31
 对坐标进行哈希编码，精确到7位（最大误差约150m）
 
 ```
->>> pdt.encode(lat, lng, 7)
+>>> gt.encode(lat, lng, 7)
 'wtw037m'
 ```
 
 逆解析哈希值，返回（纬度，经度）
 
 ```
->>> pdt.decode('wtw037m')
+>>> gt.decode('wtw037m')
 (30.999984741210938, 120.99998474121094)
 ```
 
 逆解析哈希值，并返回网格的边长（纬度，经度，纬度跨度，经度跨度）
 
 ```
->>> pdt.decode_exactly('wtw037m')
+>>> gt.decode_exactly('wtw037m')
 (30.999984741210938, 120.99998474121094, 0.0006866455078125, 0.0006866455078125)
 ```
 
 查看哈希值的边界
 
 ```
->>> pdt.bbox('wtw037m')
+>>> gt.bbox('wtw037m')
 {
     "e": 121.00067138671875,  # 最大经度
     "n": 31.00067138671875,  # 最大纬度
@@ -365,14 +365,14 @@ lat = 31
 查看周围相邻的8个哈希值
 
 ```
->>> pdt.neighbors('wtw037m')
+>>> gt.neighbors('wtw037m')
 ['wtw037k', 'wtw037q', 'wtw037s', 'wtw037t', 'wtw037w', 'wtw037h', 'wtw037j', 'wtw037n']
 ```
 
 查找半径500米内、指定精度的所有哈希值
 
 ```
->>> pdt.hash_neighbors_radius(lat, lng, radius_m=500, precision=7)
+>>> gt.hash_neighbors_radius(lat, lng, radius_m=500, precision=7)
 'wtw037q,wtw037g,wtw0376,wtw037y,wtw0374,wtw03e8,wtw037z,wtw03kh,wtw037n,wtw037t,wtw036v,wtw037x,wtw036w,wtw036y,wtw03e2,wtw03kj,wtw036s,wtw037p,wtw037w,wtw037h,wtw037e,wtw036z,wtw037r,wtw037u,wtw037f,wtw037d,wtw037v,wtw036t,wtw03kn,wtw0377,wtw037m,wtw03eb,wtw036g,wtw036f,wtw037j,wtw036u,wtw0375,wtw03db,wtw037s,wtw03e0,wtw037k'
 ```
 
@@ -384,7 +384,7 @@ lat = 31
 首先初始化邮箱实例，
 
 ```
-mail = pdt.Mail() # 初始化邮箱实例
+mail = gt.Mail() # 初始化邮箱实例
 ```
 
 设置签名（可选）
@@ -426,7 +426,7 @@ mail.send_mail()
 首先初始化MySQL实例（通过账密），
 
 ```
-mysql = pdt.MySQL(
+mysql = gt.MySQL(
     user_name='xxxx', 
     password='xxxx', 
     host='xxx', 
@@ -438,7 +438,7 @@ mysql = pdt.MySQL(
 或者通过配置文件初始化，
 
 ```
-mysql = pdt.MySQL(path_config='配置文件地址')
+mysql = gt.MySQL(path_config='配置文件地址')
 ```
 
 执行SQL并返回结果
@@ -469,13 +469,13 @@ mysql.to_sql(df, table_name)  # 支持传递更多参数，见pandas的df.to_sql
 首先本地已经起了一个Redis服务，然后初始化Redis实例
 
 ```
-redis = pdt.Redis(db=0)  # 初始化Redis实例
+redis = gt.Redis(db=0)  # 初始化Redis实例
 ```
 
 或者连接远程Redis，
 
 ```
-redis = pdt.Redis(
+redis = gt.Redis(
     host=远程host, 
     port=远程port, 
     db=0
@@ -510,13 +510,13 @@ redis.delete('s')
 
 保存数据
 ```
-pdt.pickle_dump(666, 'test.pkl')
+gt.pickle_dump(666, 'test.pkl')
 ```
 
 读取数据
 
 ```
->>> pdt.pickle_load('test.pkl')
+>>> gt.pickle_load('test.pkl')
 666
 ```
 
@@ -527,7 +527,7 @@ pdt.pickle_dump(666, 'test.pkl')
 初始化S3实例，
 
 ```
-s3 = pdt.S3(
+s3 = gt.S3(
     access_key_id='xxx', 
     secret_access_key='xxx', 
     region='xxx', 
@@ -539,7 +539,7 @@ s3 = pdt.S3(
 或者通过配置文件初始化
 
 ```
-s3 = pdt.S3(path_config='配置文件地址')
+s3 = gt.S3(path_config='配置文件地址')
 ```
 
 拉取某个文件（目前仅支持csv和parquet格式）
@@ -581,7 +581,7 @@ s3.download_file('remote_path', 'local_path')
 环状分布图
 
 ```
-pdt.donut([1, 1, 2, 1])
+gt.donut([1, 1, 2, 1])
 ```
 ![](https://upload-images.jianshu.io/upload_images/8888511-d6a378f60408d306.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
@@ -589,7 +589,7 @@ pdt.donut([1, 1, 2, 1])
 
 首先，初始化中国实例（用于获取最新的行政区划）
 ```
-china = pdt.China() # 初始化中国实例
+china = gt.China() # 初始化中国实例
 ```
 
 地理可视化，全国、省、市、区都可以画~

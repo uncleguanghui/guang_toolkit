@@ -52,7 +52,7 @@ class CleanHook(clean):
         maybe_rm('.eggs')
         subprocess.call('rm -rf *.egg', shell=True)
         subprocess.call('rm -f datastore.db', shell=True)
-        subprocess.call('find . -name "*.pyc" -exec rm -rf {} \;',
+        subprocess.call(r'find . -name "*.pyc" -exec rm -rf {} \;',
                         shell=True)
 
 
@@ -60,7 +60,6 @@ setup(
     name="guang_toolkit",  # 应用名
     version=get_version(),  # 版本号
     packages=find_packages(),  # 指定子目录的python包
-    long_description_content_type='text/markdown',
     install_requires=[  # 依赖列表
         'pandas >= 0.24.2',
         'openpyxl >= 2.5.12',
@@ -83,7 +82,7 @@ setup(
         'boto3 >= 1.9.137',
         'bs4 >= 0.0.1',
         'pypinyin >= 0.36.0',
-        'pyarrow>=0.16.0'
+        'pyarrow >= 0.16.0'
     ],
     tests_require=[
         'pytest >= 4.4.1',
@@ -109,9 +108,11 @@ setup(
     # 其他描述信息
     author='guanghui.zhang',
     author_email='415558663@qq.com',
-    description="这是一个Python工具包",
-    keywords="toolkit",
+    description="python toolkit",
+    keywords=['toolkit', 'mail', 'geohash', 'mysql', 'pickle', 's3', 'weather', 'china', 'amap', 'crawler'],
     long_description=read('README.md'),
+    long_description_content_type='text/markdown',
+    python_requires='>=3',
     license="MIT",
     url='https://github.com/uncleguanghui/guang_toolkit'
 )

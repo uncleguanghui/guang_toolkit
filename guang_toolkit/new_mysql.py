@@ -16,10 +16,8 @@ from sqlalchemy import Integer, VARCHAR, TEXT, DATETIME
 from sqlalchemy.dialects.mysql import DOUBLE
 
 try:
-    from .func import load_config
     from .basic import Basic
 except (ImportError, ValueError):
-    from guang_toolkit import load_config
     from guang_toolkit.basic import Basic
 
 logger = logging.getLogger(__name__)
